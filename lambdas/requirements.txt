@@ -1,0 +1,3 @@
+aiohttp_sse
+aiohttp
+typing_extensions
