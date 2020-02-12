@@ -9,3 +9,4 @@ cdk.out
 
 lambdas/*.dist-info/*
 lambdas/*/*
+lambdas/six.py

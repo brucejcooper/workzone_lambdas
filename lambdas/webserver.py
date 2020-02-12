@@ -4,26 +4,12 @@ from threading import Timer
 import asyncio
 import greengrasssdk
 from aiohttp import web, WSMsgType
-from aiohttp_sse import sse_response
 import json
 from datetime import datetime
-
+import os
 
 # Setup logging to stdout
 logger = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
-
-# async def hello(request):
-#     # loop = asyncio.get_event_loop()
-#     async with sse_response(request) as resp:
-#         while True:
-#             time_dict = {'time': 'Server Time : {}'.format(datetime.now())}
-#             data = json.dumps(time_dict, indent=2)
-#             print(data)
-#             await resp.send(data)
-#             await asyncio.sleep(1)
-#     return resp
 
 async def websocket_handler(request):
     ws = web.WebSocketResponse()
@@ -63,12 +49,19 @@ async def index(request):
             })
             </script>
         </head>
-        <body>
+        <body style="border: 0;">
             <h1>Response from server:</h1>
             <pre id="response"></pre>
+
+            <iframe src="http://localhost:3000/d/3mEuOwggk/farm-production?orgId=1&refresh=250ms&kiosk" onload="this.width=this.window.innerWidth;this.height=this.window.innerHeight-300;" frameborder="0" >
+            No Iframes
+            </iframe>
+
         </body>
     </html>
     """
+    with open(os.path.join(os.path.dirname(__file__), "html", "index.html")) as f:
+        d = f.read()
     return web.Response(text=d, content_type='text/html')
 
 app = web.Application()
