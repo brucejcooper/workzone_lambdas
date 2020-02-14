@@ -7,6 +7,7 @@ node_modules
 .cdk.staging
 cdk.out
 
-lambdas/*.dist-info/*
-lambdas/*/*
-lambdas/six.py
+gg_lambdas/*.dist-info/*
+gg_lambdas/*/*
+gg_lambdas/six.py
+gg_lambdas/phue.py

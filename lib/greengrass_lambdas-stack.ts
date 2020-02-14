@@ -4,14 +4,17 @@ import * as iam from '@aws-cdk/aws-iam'
 import * as uuid from 'uuid'
 import * as crypto from 'crypto'
 import * as fs from 'fs'
+import * as sns from '@aws-cdk/aws-sns'
 const { hashElement } = require('folder-hash');
+import { SnsEventSource } from '@aws-cdk/aws-lambda-event-sources';
+import * as subs from '@aws-cdk/aws-sns-subscriptions';
 
 export class GreengrassLambdasStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // The code that defines your stack goes here
-    const role = new iam.Role(this, "LambdaRole", {
+    const gg_lambda_role = new iam.Role(this, "LambdaRole", {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('AWSGreengrassFullAccess'),
@@ -19,7 +22,25 @@ export class GreengrassLambdasStack extends cdk.Stack {
       ]    
     });
 
-    const code = new lambda.AssetCode('lambdas');
+    const cloud_lambda_role = new iam.Role(this, "CloudLambdaRole", {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSNSFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AWSIoTDataAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+      ]    
+    });
+
+
+    const newOrdersTopic = new sns.Topic(this, "NewDemandTopic", {
+      topicName: "retail-demand-neworders"
+    })
+
+
+
+
+    const cloud_code = new lambda.AssetCode('cloud_lambdas');
+    const gg_code = new lambda.AssetCode('gg_lambdas');
 
     // Create a unique value that represents all the files in the code directory.
     // This is used to generate a unique "version" object for each of the lambdas, 
@@ -28,20 +49,35 @@ export class GreengrassLambdasStack extends cdk.Stack {
     // I don't care.
     // TODO this won't handle updates in subdirectories
     var hash = crypto.createHash('sha1')
-    for (let file of fs.readdirSync(code.path)) {
+    for (let file of fs.readdirSync(gg_code.path)) {
       if (file.endsWith(".py") || file.endsWith(".txt")) {
-        hash.update(fs.readFileSync(`${code.path}/${file}`))
+        hash.update(fs.readFileSync(`${gg_code.path}/${file}`))
       }
     }
     var version = hash.digest('hex')
 
+
+    var demandTranslator = new lambda.Function(this, "FarmDemandTranslator", {
+      code: cloud_code,
+      functionName: "FarmDemandTranslator",
+      description: "Takes SNS messages published to represent demand, and sends them over MQTT to farm.  Note that this runs in the cloud, not on the Farm GreenGrass server",
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: 'demand_translator.function_handler',
+      memorySize: 256,
+      role: cloud_lambda_role
+    });
+
+    newOrdersTopic.addSubscription(new subs.LambdaSubscription(demandTranslator));
+
+
+
     const demand_receiver = new lambda.Function(this, "DemandReceiver", {
-      code: code,
+      code: gg_code,
       functionName: "FarmDemandReceiver",
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: 'demand_receiver.function_handler',
       memorySize: 256,
-      role: role,
+      role: gg_lambda_role,
     })
 
     new lambda.Alias(this, "DemandReceiverProdAlias", {
@@ -54,12 +90,12 @@ export class GreengrassLambdasStack extends cdk.Stack {
 
 
     const light_level_receiver = new lambda.Function(this, "LoraLightLevelReceiver", {
-      code: code,
+      code: gg_code,
       functionName: "FarmLoraLightLevelReceiver",
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: 'light_receiver.function_handler',
       memorySize: 256,
-      role: role,
+      role: gg_lambda_role,
     })
 
     new lambda.Alias(this, "LoraLightLevelReceiverProdAlias", {
@@ -73,12 +109,12 @@ export class GreengrassLambdasStack extends cdk.Stack {
 
 
     const light_updater = new lambda.Function(this, "LightUpdater", {
-      code: code,
+      code: gg_code,
       functionName: "FarmLightUpdater",
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: 'light_updater.function_handler',
       memorySize: 256,
-      role: role,
+      role: gg_lambda_role,
     })
 
     new lambda.Alias(this, "LightUpdaterProdAlias", {
@@ -91,13 +127,13 @@ export class GreengrassLambdasStack extends cdk.Stack {
 
 
     const metric_receiver = new lambda.Function(this, "MetricReceiver", {
-      code: code,
+      code: gg_code,
       description: "Receives Metrics from devices, and sends them to the cloud - or does it?",
       functionName: "FarmMetricReceiver",
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: 'metric_receiver.function_handler',
       memorySize: 256,
-      role: role,
+      role: gg_lambda_role,
     })
 
     new lambda.Alias(this, "MetricReceiverrProdAlias", {
@@ -110,13 +146,13 @@ export class GreengrassLambdasStack extends cdk.Stack {
 
 
     const farm_procesisng = new lambda.Function(this, "FarmProcessing", {
-      code: code,
+      code: gg_code,
       description: "Processes demand, producing beans",
       functionName: "FarmProcesisng",
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: 'farm_processing.function_handler',
       memorySize: 256,
-      role: role,
+      role: gg_lambda_role,
     })
 
     new lambda.Alias(this, "FarmProcessingrProdAlias", {
@@ -130,13 +166,13 @@ export class GreengrassLambdasStack extends cdk.Stack {
 
 
     const webserver = new lambda.Function(this, "Webserver", {
-      code: code,
+      code: gg_code,
       description: "runs a webserver",
       functionName: "FarmWebserver",
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: 'webserver.function_handler',
       memorySize: 256,
-      role: role,
+      role: gg_lambda_role,
     })
 
     new lambda.Alias(this, "WebserverProdAlias", {
@@ -146,6 +182,8 @@ export class GreengrassLambdasStack extends cdk.Stack {
         // codeSha256: hash_result
       })
     })
+
+
   
   
   }
