@@ -2,7 +2,6 @@ import logging
 import sys
 from threading import Timer
 import asyncio
-import greengrasssdk
 from aiohttp import web, WSMsgType
 import json
 from datetime import datetime

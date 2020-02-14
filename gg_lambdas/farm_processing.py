@@ -1,7 +1,6 @@
 import logging
 import time
 
-import greengrasssdk
 from demand_db import DemandDB
 from constants import bean_names
 from datetime import datetime, timezone

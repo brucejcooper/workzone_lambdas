@@ -2,7 +2,6 @@ import logging
 import time
 from phue import Bridge
 
-import greengrasssdk
 from demand_db import DemandDB
 from constants import bean_names
 

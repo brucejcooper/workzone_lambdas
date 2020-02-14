@@ -2,7 +2,6 @@ import logging
 import sys
 from threading import Timer
 
-import greengrasssdk
 
 # Setup logging to stdout
 logger = logging.getLogger(__name__)
