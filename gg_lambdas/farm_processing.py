@@ -21,7 +21,7 @@ def run_farm(bean_name):
         try:
             demand = 0
             demand = db.get_current_level(bean_name)
-            logger.info("Demand is %d for %s", demand, bean_name)
+            logger.info("Demand is %f for %s", demand, bean_name)
             if demand >= 0.001:  # Allow for epsilon
                 time.sleep(bean_processing_time(bean_name))
                 logger.info("Adding production for %s", bean_name)

@@ -80,3 +80,18 @@ class DemandDB:
             }
         ]
         self.influx.write_points(json_body)
+
+    def add_moisture_measurement(self, timestamp, bean, moisture_level):
+        json_body = [
+            {
+                "measurement": "moisture",
+                "tags": {
+                    "bean": bean
+                },
+                "time": timestamp.isoformat(),
+                "fields": {
+                    "moisture_level": moisture_level
+                }
+            }
+        ]
+        self.influx.write_points(json_body)

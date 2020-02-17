@@ -30,5 +30,9 @@ def function_handler(event, context):
 
     if "light" in payload:
         db.add_light_intensity_measurement(timestamp=timestamp, bean=bean, light=payload["light"])
-    elif "battery" in payload:
+
+    if "moisture" in payload:
+        db.add_moisture_measurement(timestamp=timestamp, bean=bean, moisture_level=payload["moisture"])
+
+    if "battery" in payload:
         db.record_battery_level(timestamp, device, payload["battery"])
