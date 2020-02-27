@@ -12,17 +12,19 @@ def function_handler(event, context):
     print(event)
     request = Sigv4Request(region="ap-southeast-2")
 
-    body = {
-        "orderId": str(uuid4()),
-        "orderItems": [{
-            "coffeeName": "SageBrew",
-            "number": 1,
-            "size": "L"
-        }],
-        "timestamp": "{}-{}-{}T{}:{}:{}Z".format(*time.gmtime()[0:6]),
-        "orderPayable": 10.4
-    }
-    r = request.post("https://p61g8x9yl5.execute-api.ap-southeast-2.amazonaws.com/master/orders", json=body)
+    # body = {
+    #     "orderId": str(uuid4()),
+    #     "orderItems": [{
+    #         "coffeeName": "SageBrew",
+    #         "number": 1,
+    #         "size": "L"
+    #     }],
+    #     "timestamp": "{}-{}-{}T{}:{}:{}Z".format(*time.gmtime()[0:6]),
+    #     "orderPayable": 10.4
+    # }
+
+    # TODO validate the payload before posting
+    r = request.post("https://p61g8x9yl5.execute-api.ap-southeast-2.amazonaws.com/master/orders", json=event)
 
     if not r.ok:
         raise Exception("Error invoking: {}".format(r.content))

@@ -2,6 +2,7 @@ import logging
 import json
 import boto3
 from datetime import datetime, timezone
+from demand_db import DemandDB
 
 # Setup logging to stdout
 logger = logging.getLogger(__name__)
@@ -32,6 +33,8 @@ size_multipliers = {
     'L': 1.6
 }
 
+db = DemandDB(writable=True)
+
 
 def function_handler(event, context):
     print("Received message {}".format(event))
@@ -56,10 +59,7 @@ def function_handler(event, context):
 
     for bean in amounts:
         if amounts[bean] > 0:
-            payload = {
-                "bean": bean,
-                "quantity": amounts[bean],
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
-            print("Publishing {}".format(payload))
-            iot.publish(topic="workzone/farm/demand", payload=json.dumps(payload))
+            quantity = amounts[bean]
+            timestamp = datetime.now(timezone.utc)
+            operation = 'demand'
+            db.add_delta(timestamp=timestamp, bean=bean, quantity=float(quantity), operation=operation)

@@ -28,7 +28,18 @@ export class GreengrassLambdasStack extends cdk.Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSNSFullAccess'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AWSIoTDataAccess'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-      ]    
+      ],
+      inlinePolicies: {
+        "invokeAPI": new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: ["execute-api:Invoke"],
+              resources: ["arn:aws:execute-api:ap-southeast-2:198806606315:p61g8x9yl5/*/POST/orders"]
+            })
+          ]
+        })
+      }
     });
 
 
@@ -66,6 +77,19 @@ export class GreengrassLambdasStack extends cdk.Stack {
       memorySize: 256,
       role: cloud_lambda_role
     });
+
+
+    new lambda.Function(this, "FarmIoTToOrdersPoster", {
+      code: cloud_code,
+      functionName: "FarmIoTToOrdersPoster",
+      description: "Invokes the Order API when it receives an IoT Message",
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: 'order_poster.function_handler',
+      memorySize: 512,
+      timeout: cdk.Duration.seconds(10),
+      role: cloud_lambda_role
+    });
+
 
     newOrdersTopic.addSubscription(new subs.LambdaSubscription(demandTranslator));
 

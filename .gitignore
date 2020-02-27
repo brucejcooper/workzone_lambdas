@@ -9,5 +9,7 @@ cdk.out
 
 gg_lambdas/*.dist-info/*
 gg_lambdas/*/*
+cloud_lambdas/*/*
 gg_lambdas/six.py
+cloud_lambdas/six.py
 gg_lambdas/phue.py
