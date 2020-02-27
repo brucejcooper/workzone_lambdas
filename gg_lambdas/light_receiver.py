@@ -20,19 +20,22 @@ def strip_nanos(val):
 def function_handler(event, context):
     logger.info("Received message {}".format(event))
 
-    payload = event['payload_fields']
-    device = event['dev_id']
-    bean = device[5:]
-    tsstring = event["metadata"]["time"]
-    # The timestamp provided has a timezone and nanoseconds, and a Zulu timezone on it, 
-    # which Python doesn't understand.  Strip the last 4 characters off
-    timestamp = datetime.fromisoformat(strip_nanos(tsstring))
+    if 'payload_fields' in event:
+        payload = event['payload_fields']
+        device = event['dev_id']
+        bean = device[5:]
+        tsstring = event["metadata"]["time"]
+        # The timestamp provided has a timezone and nanoseconds, and a Zulu timezone on it, 
+        # which Python doesn't understand.  Strip the last 4 characters off
+        timestamp = datetime.fromisoformat(strip_nanos(tsstring))
 
-    if "light" in payload:
-        db.add_light_intensity_measurement(timestamp=timestamp, bean=bean, light=payload["light"])
+        if "light" in payload:
+            db.add_light_intensity_measurement(timestamp=timestamp, bean=bean, light=payload["light"])
 
-    if "moisture" in payload:
-        db.add_moisture_measurement(timestamp=timestamp, bean=bean, moisture_level=payload["moisture"])
+        if "moisture" in payload:
+            db.add_moisture_measurement(timestamp=timestamp, bean=bean, moisture_level=payload["moisture"])
 
-    if "battery" in payload:
-        db.record_battery_level(timestamp, device, payload["battery"])
+        if "battery" in payload:
+            db.record_battery_level(timestamp, device, payload["battery"])
+    else:
+        print("No payload.  Ignoring")

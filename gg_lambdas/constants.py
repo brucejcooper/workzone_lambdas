@@ -1,4 +1,4 @@
 
 
 
-bean_names = ['colombia', 'yemen', 'vietnam']
+bean_names = ['colombia', 'brazil', 'vietnam']

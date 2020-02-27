@@ -17,4 +17,4 @@ def function_handler(event, context):
     quantity = event['quantity']
     timestamp = datetime.fromisoformat(event['timestamp'])
     operation = 'demand'
-    db.add_delta(timestamp=timestamp, bean=bean, quantity=quantity, operation=operation)
+    db.add_delta(timestamp=timestamp, bean=bean, quantity=float(quantity), operation=operation)

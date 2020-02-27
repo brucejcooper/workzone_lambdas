@@ -10,18 +10,18 @@ iot = boto3.client('iot-data')
 
 blends = {
     "SageBrew": {
-        'colombia': 0.3,
-        'yemen': 0.7,
+        'colombia': 0.7,
+        'brazil': 0.3,
         'vietnam': 0
     },
     "ElasticBean": {
         'colombia': 0.4,
-        'yemen': 0.6,
+        'brazil': 0.6,
         'vietnam': 0
     },
     "CoffeeFormation": {
         'colombia': 0.0,
-        'yemen': 0.0,
+        'brazil': 0.0,
         'vietnam': 1
     }
 }
@@ -38,7 +38,7 @@ def function_handler(event, context):
 
     amounts = {
         'colombia': 0,
-        'yemen': 0,
+        'brazil': 0,
         'vietnam': 0
     }
 

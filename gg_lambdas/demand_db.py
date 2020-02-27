@@ -3,7 +3,6 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 from influxdb import InfluxDBClient
-import constants 
 
 # Setup logging to stdout
 logger = logging.getLogger(__name__)
@@ -15,7 +14,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 class DemandDB:
     def __init__(self, writable=False):
         self.writable = writable
-        self.influx = InfluxDBClient(host='localhost', port=8086)
+        self.influx = InfluxDBClient(host='workzone-metrics.bjcatamzn.net', username='farm', password='bbsagKx44EuoAsJguMPr', port=8086, ssl=True)
         self.influx.switch_database('farm')
 
 
